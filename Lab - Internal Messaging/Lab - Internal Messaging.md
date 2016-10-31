@@ -21,8 +21,8 @@ Att tillhandahålla grundläggande kunskaper i hur man kan lösa intern meddelan
 git clone https://github.com/dhindrik/TDswe16.git
 ```
 
-### Öppna projektet
-Öppna projektet i Visual Studio eller i Xamarin studio
+### Öppna solution filen
+Öppna solution filen i **Visual Studio** eller i **Xamarin studio**.
 
 ```
 /TDSwe16/Lab - Internal Messaging/lab/InternalMessaging.sln
