@@ -1,10 +1,9 @@
 #Lab - Internal Messaging
 
-**Tid:** 10-30 minuter
+**Tid:** 60 minuter
 
 **Område:** iOS
 
-**Genomgång:** En snabb genomgång av vad Internal Messaging innebär, vilka problem det löser samt vilka varianter av färdiga ramverk som finns tillgängliga.
 
 **Miljö:**
 
