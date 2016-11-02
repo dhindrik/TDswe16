@@ -1,0 +1,9 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/Lab - Xamarin.Forms/Solution/.vs/XamarinNews/v14/.suo
+/Lab - Xamarin.Forms/Solution/packages
+/Lab - Xamarin.Forms/Solution/XamarinNews/XamarinNews/obj/Debug
+/Lab - Xamarin.Forms/Solution/XamarinNews/XamarinNews.Droid/obj/Debug
+/Lab - Xamarin.Forms/Solution/XamarinNews/XamarinNews.UWP/obj/x86/Debug
