@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="InternalMessaging.Views.MainView">
+  <Grid>
+
+    <Grid.RowDefinitions>
+      <RowDefinition Height="100" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+
+    <Label Text="Virtual Auto Repair AB" />
+  </Grid>
+</ContentPage>
