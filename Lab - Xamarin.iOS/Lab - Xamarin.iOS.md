@@ -43,16 +43,20 @@ Om man skulle köra fast eller bara vill fuska lite så finns det en katalog som
 15.	Kör igång appen genom att klicka på start. Se till att Debug och iPhone simulator är vald. Välj önskad iPhone modell i dropdownen.
 	<img src="images/5.png" />
 
-16.	Navigera runt i appen.17.	Stäng debuggern.18.	Lägg till 2 Text Fileds.19.	Lägg till en knapp till höger i navigationsbaren.
+16.	Navigera runt i appen.17.	Stäng debuggern.18.	Lägg till 2 Text Fields.19.	Lägg till en knapp till höger i navigationsbaren.
 	<img src="images/6.png" />
 	
-20.	Klicka längst ner på texten ”View Controller” och gå till properties och skriv ”CreateViewController” i fältet för ”Class” och klicka på enter för att skapa upp en klass för vykontrollern.21.	Klicka på Saveknappen och ge den ett namn i properties.22.	Öppna den nya klassen ”CreateViewController”23.	Skapa en override på ”ViewDidLoad”        partial class CreateViewController : UIViewController        {	        public CreateViewController (IntPtr handle) : base (handle)	        {            }            public override void ViewDidLoad()            {                   base.ViewDidLoad();
+20.	Klicka längst ner på texten ”View Controller” och gå till properties och skriv ”CreateViewController” i fältet för ”Class” och klicka på enter för att skapa upp en klass för vykontrollern.21.	Klicka på Saveknappen och ge den ett namn i properties.22.	Öppna den nya klassen ”CreateViewController”23.	Skapa en override på ”ViewDidLoad”	```csharp        partial class CreateViewController : UIViewController        {	        public CreateViewController (IntPtr handle) : base (handle)	        {            }            public override void ViewDidLoad()            {                   base.ViewDidLoad();
             }
         }
-24.	Lägg till en eventhanterare på Saveknappen för att hantera när användare trycker på knappen.         public override void ViewDidLoad()         {            base.ViewDidLoad();            Save.TouchUpInside += Save_TouchUpInside;         }         private void Save_TouchUpInside(object sender, 		EventArgs e)         {             		 }25.	Gå tillbaka till storyboarden och sätt namn på textfälten.26.	Skriv kod för att visa en dialogruta som välkomnar användaren.
-		
-		var message = string.Format("Hello {0} {1}", 		FirstName.Text, LastName.Text);		var dialog = new UIAlertView()		{			Title = "Welcome",
-			Message = message		};		dialog.AddButton("OK");		dialog.Show();		27.	Dra ut en ”Tab Bar Controller” till storyboarden.
+	```24.	Lägg till en eventhanterare på Saveknappen för att hantera när användare trycker på knappen.	
+	```csharp	public override void ViewDidLoad()   {       base.ViewDidLoad();       Save.TouchUpInside += Save_TouchUpInside;   }   	private void Save_TouchUpInside(object sender, 		EventArgs e)   {             	}	```25.	Gå tillbaka till storyboarden och sätt namn på textfälten.26.	Skriv kod för att visa en dialogruta som välkomnar användaren.
+
+	```csharp	
+	var message = string.Format("Hello {0} {1}", 	FirstName.Text, LastName.Text);	var dialog = new UIAlertView()	{				Title = "Welcome",
+				Message = message	};		dialog.AddButton("OK");
+		dialog.Show();
+	```		27.	Dra ut en ”Tab Bar Controller” till storyboarden.
 	<img src="images/7.png" />
 
 28.	Markera TabViewControllern och ge den storyboardID "MainTabs"29.	I CreateViewController lägg till följande kod för att navigera till tabbarna.
@@ -66,4 +70,5 @@ Om man skulle köra fast eller bara vill fuska lite så finns det en katalog som
 	```csharppublic override nint RowsInSection(UITableView tableView, nint section)
 	{      return _items.Count;	}```40.	Gå till storyboarden och markera cellen och ange ”NewsCell” som Identifier i properties fönstret.
 	<img src="images/8.png" />
-	41.	Kör appen42.	Det sista steget är att vi vill att det ska hända något när man klickar på en rad. Gå in i NewsTableController och gör en override på ”RowSelected”. ```csharppublic override void RowSelected(UITableView tableView, NSIndexPath indexPath){	var message = string.Format("You selected: {0}",  _items[indexPath.Row].Item1);			            var dialog = new UIAlertView()            {                Title = "Hi",                Message = message            };            dialog.AddButton("OK");            dialog.Show();}```43.	Kör appen.
+	41.	Kör appen42.	Det sista steget är att vi vill att det ska hända något när man klickar på en rad. Gå in i NewsTableController och gör en override på ”RowSelected”.
+ 	```csharp	public override void RowSelected(UITableView tableView, NSIndexPath indexPath)	{		var message = string.Format("You selected: {0}",  		_items[indexPath.Row].Item1);			            var dialog = new UIAlertView()            {                Title = "Hi",                Message = message            };            dialog.AddButton("OK");            dialog.Show();	}	```43.	Kör appen.
