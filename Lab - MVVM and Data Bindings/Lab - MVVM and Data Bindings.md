@@ -73,6 +73,10 @@ Alla appar behöver en startsida.
 	
 	>**Xaml-fakta** - Xaml är inte ett språk/markup för att definera GUI. Det är en markup för att instansiera objekt. *Förvirrad? Fråga deltagaren till vänster om denne förstår vad som menas med denna mening*.
 	
+5. Öppna Xamarin Previewer för att förhandsgranska resultatet
+
+	>I Vi
+	
 ### Sätt MainView som startsida
 
 1. Leta upp filen ``App.xaml.cs``
@@ -103,7 +107,60 @@ Alla appar behöver en startsida.
 	
 	<img src="Images/8.png" Width="300" />
 
+### Skapa en vymodell och databind
+TODO
 
+* Skapa MainViewModel
+* Implementera INotifyPropertyChanged
+* Skapa vymodellen i vyn
+* Databind till vymodellen
+
+### Navigation till ordersidan
+TODO
+
+* Skapa OrdersView 
+* Skapa OrdersViewModel
+* Skapa en basklass för vymodeller (flytta navigation hit)
+* Uppdatera alla vymodeller att ärva från den basklassen
+* Uppdatera MainViewModel med ett ICommand för att navigera till OrdersView
+* Uppdatera MainView med en knapp som databinder till ICommand
+
+### Databinding - listor
+TODO
+
+* Uppdatera OrdersView med en ListView
+* Uppdatera OrdersViewModel med att använda OrderRepository
+* Exponera en egenskap med orders i en ObservableCollection<T>
+* Implementera delete med swipe gesture
+
+### Add order vy
+
+TODO
+
+* Skapa en AddOrderView + modell
+* Koppla till repository
+* Uppdatera OrdersView med en Pull to refresh
+
+### Extra material - TinyPubSub
+
+* Uppdatera OrdersView direkt vid Add order
+
+### Extra material - Fody
+
+* Slipp INotifyPropertyChanged
+
+### Extra material - Autofac för IoC
+
+* Implementera IoC för snyggare fin-kod
+
+###
+
+
+
+### Interna noteringar
+
+* Skapa en IOrderRepository med implementation
+* 
 	
 	
 	
