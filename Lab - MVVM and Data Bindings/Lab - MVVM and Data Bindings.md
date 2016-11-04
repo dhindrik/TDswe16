@@ -10,10 +10,12 @@
 * Mac med Xamarin Studio och XCode (om iOS, Android och/eller Mac OS X)
 * Windows maskin med Visual Studio (om Windows, WP, Android)
 
-##Syfte med labben
+## Syfte med labben
 Att tillhandahålla grundläggande kunskaper för att komma igång med MVVM och Data Bindings.
 
-##Förberedande arbete
+Det finns en hel del ramverk kring MVVM. Denna labb visar grundläggande MVVM utan tredje-parts ramverk. 
+
+## Förberedande arbete
 
 ### Klona miljön
 ```
@@ -42,13 +44,15 @@ Om man skulle köra fast eller bara vill fuska lite så finns det en katalog som
 
 3. Testa att bygga projektet, du behöver inte starta det i en emulator/device än.
 
-### Sätt upp strukturen (del 1)
+### Sätt upp strukturen
 Ett MVVM-projekt följer oftast vanligtvis en grundläggande struktur. Det första vi behöver är två kataloger för att separera vyer (UI) från vymodeller (data).
 
 1. Öppna upp projektet *LabMvvm (portable)*
 2. Skapa katalogerna **Views** och **ViewModels**
 
 	<img src="Images/2.png" Width="300" />
+
+	>**Varför** - Normalt vill man dela upp vyer och vymodeller för att tydligt separera deras respektive funktion. Om det dessutom är ett projekt som sträcker sig utanför de plattformar som stöds av Xamarin Forms så kan man lägga vymodeller i ett eget bibliotek om man önskar.
 
 ### Skapa den första vyn - MainView.xaml
 
@@ -99,7 +103,12 @@ Alla appar behöver en startsida.
 3. Ändra innehållet i konstruktorn till 
 
 	```csharp
-	public App()   {		InitializeComponent();      	MainPage = new LabMvvm.Views.MainView();   }
+	public App()
+   {
+		InitializeComponent();
+
+      	MainPage = new LabMvvm.Views.MainView();
+   }
    ```
    
    >**Varför** - MainPage är en egenskap på klassen `Xamarin.Forms.Application`. Den ska peka på en instans av en `Xamarin.Forms.Page`. App-klassen är den klass som hanterar uppstart av vårt forms-projekt. 
@@ -119,16 +128,236 @@ Alla appar behöver en startsida.
 	
 	<img src="Images/8.png" Width="300" />
 
-### Skapa en vymodell och databind
-TODO
+### Skapa en vymodell
+I denna sektion kommer vi börja känna kraften av MVVM. Vi ska skapa den första vy-modellen.
 
-* Skapa MainViewModel
-* Implementera INotifyPropertyChanged
-* Skapa vymodellen i vyn
-* Databind till vymodellen
+> En vymodell har i uppgift att tillhandahålla data till vyn och hantera events från densamma. En **vy** har endast i uppgift att visa saker på en skärm och **vymodellen** hanterar all logik. (Det finns små undantag så klart) :)
+
+Vymodellen exponerar kommandon (actions) och egenskaper (data) till vyn. 
+
+1. Skapa MainViewModel.cs genom att högerklicka på ViewModels katalogen och välj `Add` -> `Add new item`. 
+2. Välj `class` och skriv in `MainViewModel.cs` som namn.
+
+	<img src="Images/11.png"  width="600" />
+
+3. Gör klassen publik.
+
+	```csharp
+	public class MainViewModel
+    {
+    }
+	```
+
+	> Denna klass gör inte särskilt mycket av sig själv så vi måste utöka den med INotifyPropertyChanged och lite faktiska egenskaper att databinda mot.
+
+### Implementera INotifyPropertyChanged
+
+INotifyPropertyChanged är ett interface definierat i `System.ComponentModel` och är inte Xamarin-specifikt. Det ger fördelar om man vill dela vymodeller med plattformar som ej stöds av Xamarin. Definitionen av interfacet ser ut som nedan:
+
+```csharp
+    // ENDAST EXEMPEL
+    public interface INotifyPropertyChanged
+    {
+        event PropertyChangedEventHandler PropertyChanged;
+    }
+```
+
+>Detta är en av grundbultarna i MVVM och det är genom detta interface som vyn kommer att kommunicera tillbaka till vymodellen på ett löst kopplat sätt. Vyn förutsätter att vymodellen har INotifyPropertyChanged implementerat och lägger en lyssnare på detta event. På detta sätt kan en löst kopplad vymodell kommunicera med vyn att egenskaper har förändrats.
+
+1. Lägg till `using System.ComponentModel` i bland de övriga using-uttrycken.
+
+	```csharp
+	using System.ComponentModel; // <--
+	// other usings omitted
+
+	namespace LabMvvm.ViewModels
+	{
+		public class MainViewModel 
+		{
+		}
+	}
+	```
+
+2. Implementera `INotifyPropertyChanged` och lägg till en hjälp-metod för att enklare trigga eventet.
+
+	```csharp
+    public class MainViewModel : INotifyPropertyChanged
+    {
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public void RaisePropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+    }
+	```
+
+	> **Varför** - Vi lägger till en hjälpmetod för att enklare kunna kasta event vid förändring av data.
+
+3. Lägg till en egenskap som vi vill exponera till vyn. 
+
+	```csharp
+ 	public class MainViewModel : INotifyPropertyChanged
+    {
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public void RaisePropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        private string _name;
+        public string Name
+        {
+            get
+            {
+                return _name;
+            }
+            set
+            {
+                _name = value;
+                RaisePropertyChanged(nameof(Name));
+            }
+        }
+    }
+	```
+
+	Det som händer här är att vi kan hämta Name och sätta Name. När vi sätter Name så måste vi kasta eventet `RaisePropertyChanged` och det gör vi via den metod vi skapade tidigare.
+
+	> **Varför** - 	Name är en klassisk C# egenskap. Normalt sett hade man använt den enklare syntaxten `public string Name { get; set; }` men eftersom vi måste anropa `RaisePropertyChanged` på settern så kan vi inte använda oss av den kortare varianten. Men oroa dig inte, det finns snygga vägar runt detta också. Vi kommer till det i extra-materialet.
+
+### Skapa vymodellen i vyn
+
+1. Öppna filen `Views/MainView.xaml.cs`
+
+	<img src="Images/12.png" width="300" />
+
+2. Skapa en instans av MainViewModel och tilldela den till BindingContext
+
+	```csharp
+	using LabMvvm.ViewModels;
+	using Xamarin.Forms;
+
+	namespace LabMvvm.Views
+	{
+		public partial class MainView : ContentPage
+		{
+			public MainView()
+			{
+				InitializeComponent();
+
+				var vm = new MainViewModel()
+				{
+					Name = "John Doe"
+				};
+
+				BindingContext = vm;
+			}
+		}
+	}
+	```
+
+	> **Varför** - `BindingContext` är en egenskap som tillhör en ContentPage. Typen är `Object` och man är därför fri att tilldela vilket objekt man än önskar. Magin händer i vyn.
+	>
+	> Extramaterialet innehåller även delar för att införa Inversion of Control in i denna modell vilket är en viktig del i att få en hållbar arkitektur. 
+
+### Databind till vymodellen
+
+Vi har nu definerat en vymodell och knutit denna vymodell till vyn och måste utföra det sista steget för att få ett resultat.
+
+1. Öppna `Views/MainView.Xaml`
+2. Ändra värdet på Text-attributen till `{Binding Name}`.
+
+	Från
+	```xaml
+	Text="Jag är MainView"
+	```
+	Till
+	
+	```xaml
+	Text="{Binding Name}"
+	```
+	> **Varför** - Binding är en extension definerad i Xaml (TODO SOURCE). 
+
+3. Kör igång appen igen! Du bör få något som liknar bilden nedan.
+
+	<Img src="Images/13.png" Width="300" />
+
+### Kommandon
+
+För att en vy ska kommunicera tillbaka till en vymodell och faktiskt utgöra arbete så använder man sig av `Commands`. Detta är egenskaper som exponerar en funktion som är inlindad i ett `ICommand`-interface.
+
+1. Ändra vyn till följande Xaml.
+
+	```xaml
+	<?xml version="1.0" encoding="utf-8" ?>
+	<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="LabMvvm.Views.MainView">
+  		<StackLayout Padding="40">
+    		<Label Text="Ditt namn:" />
+    		<Entry Text="{Binding Name}" />
+			<Button Command="{Binding SayHi}" Text="Say hi!" />
+    		<Label Text="{Binding Greeting}" />
+  		</StackLayout>
+	</ContentPage>
+	```
+
+	>**Varför** - Vi ändrade en hel del i Xaml-koden. Samtliga kontroller har vi gått genom tidigare i genomgången av Xamarin Forms. Här kommer en snabb sammanfattning iallafall.
+	>
+	> En `ContentPage` kan bara ha en child och det är innehållet direkt under den initiala deklarationen av `ContentPage`. Denna vy använder nu `StackLayout` som rot-element och i den lägger vi upp en `Label` för att skriva en rubrik, en `Entry` för att mata in information och en `Label` för att skriva ut information.
+	>
+	>Utöver det introducerar vi `Button` som motsvarar en knapp. Alla kontroller som utför någon slags åtgärd har en attribut som heter `Command` och som vi i vy-modellen sedan knyter mot en egenskap som är av typen `ICommand`.
+
+2. Lägg till följande kod i MainViewModel.cs och lägg till de usings som saknas.
+
+	```csharp
+	public string Greeting
+	{
+		get { return $"Hi {Name}"; }
+	}
+
+	public ICommand SayHi
+	{
+		get {
+			return new Command(
+				() => RaisePropertyChanged("Greeting"));
+		}
+	}
+	```
+
+	>**Varför** - I exemplet ovan ser vi två nya varianter av egenskaper. Den första, `Greeting`, är bara `read-only` och returnerar en sträng baserat på en annan egenskap. Den andra är ett kommando som ska utföras om man väljer att trigga den kontrollen. Man kan även ha ett backing-field för kommandot men i praktiken är det av mindre betydelse då vyn kommer att binda mot kommandot och hålla den referensen i minne.
+
+	3. Ändra MainView.cs till följande
+
+	```csharp    
+	public partial class MainView : ContentPage
+    {
+        public MainView()
+        {
+            InitializeComponent();
+            BindingContext = new MainViewModel();
+        }
+    }
+	```
+
+	>**Varför** - Vi förbereder lite för det som komma skall och tar därför bort initiering av vymodellen i vyn.
+
+	4. Testkör appen genom att starta, skriva in ett namn i textboxen och därefter klicka på knappen.
+
+	5. Som en extra övning, testa att lägg till följande Xaml någonstans inom `<StackLayout>`-taggen och testkör.
+
+	```xaml
+	<Label Text="{Binding Name}" />
+	```
+
+	>**Varför** - Varje tecken du skriver i `Entry`-kontrollen anropar uppdateras egenskapen `Name` i vymodellen. Det i sin tur triggar `PropertyChanged` som talar om för den `Label` vi nyss lade till att data har ändrats.
+
+### Skapa en basklass för vymodellen
+
+
 
 ### Navigation till ordersidan
-TODO
 
 * Skapa OrdersView 
 * Skapa OrdersViewModel
