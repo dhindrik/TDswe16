@@ -35,10 +35,12 @@ Om man skulle köra fast eller bara vill fuska lite så finns det en katalog som
 1.	Starta Visual Studio (eller Xamarin Studio)
 2. Öppna solution filen ``LabMvvm.sln``
 
-> **Varför** - Projektet innehåller fyra projekt
->
-* Ett gemensamt PCL-projekt där vi kommer lägga vyer, vymodeller och gemensam kod
-* Tre (eller fler) plattformsspecifika projekt som hanterar uppstart på respektive plattform samt plattformsspecifik kod.
+	> **Varför** - Projektet innehåller fyra projekt
+	>
+	>* Ett gemensamt PCL-projekt där vi kommer lägga vyer, vymodeller och 	>gemensam kod
+	>* Tre (eller fler) plattformsspecifika projekt som hanterar uppstart på respektive plattform samt plattformsspecifik kod.
+
+3. Testa att bygga projektet, du behöver inte starta det i en emulator/device än.
 
 ### Sätt upp strukturen (del 1)
 Ett MVVM-projekt följer oftast vanligtvis en grundläggande struktur. Det första vi behöver är två kataloger för att separera vyer (UI) från vymodeller (data).
@@ -75,23 +77,33 @@ Alla appar behöver en startsida.
 	
 5. Öppna Xamarin Previewer för att förhandsgranska resultatet
 
-	>I Vi
+	>I **Visual Studio** hittar du Xamarin Previewer (som är i Preview dessutom) under ```View -> Other windows -> Xamarin.Forms Previewer```. Man måste bygga det plattformsspecifika projektet för att få se en preview. 
+	
+	>I **Xamarin Studio** öppnas Xamarin Previewer automatiskt när du öppnar en Xaml-fil.
+	
+	>**Alternativ** - Det finns en annan produkt som heter Gorilla Player som är värd att ta en titt på. Den har fördelen att man kan köra den på multipla fysiska enheter och nackdelen att den bara parsar Xaml-kod. Custom renderers mm kan man få att fungera men det är lite krångligare. Fråga gärna efter en demo av Gorilla Player.
+	
+	<img src="Images/9.png" Width="600" />
+	*Xamarin.Forms Previewer i Visual Studio*
 	
 ### Sätt MainView som startsida
 
-1. Leta upp filen ``App.xaml.cs``
+1. Radera filen ``MainPage.xaml``som ligger i roten på *LabMvvm*.
+
+	<img src="Images/10.png" Width="300" />
+
+2. Leta upp filen ``App.xaml.cs``
 
 	<img src="Images/4.png" Width="300" />
 
-2. Ändra innehållet i konstruktorn till 
+3. Ändra innehållet i konstruktorn till 
 
 	```csharp
 	public App()   {		InitializeComponent();      	MainPage = new LabMvvm.Views.MainView();   }
    ```
    
-3. Radera filen ``MainPage.xaml``som ligger i roten på *LabMvvm*. OBS, förväxla inte denna fil med ``MainView.xaml`` som du skapade tidigare.
-
-	>**Varför** - App-klassen är den klass som hanterar uppstart av vårt forms-projekt. Denna klass har egenskapen ``MainPage`` som ska peka mot en referens av ett objekt som ärver av ``ContentPage``, vilket vår ``MainView.xaml`` gör.
+   >**Varför** - MainPage är en egenskap på klassen `Xamarin.Forms.Application`. Den ska peka på en instans av en `Xamarin.Forms.Page`. App-klassen är den klass som hanterar uppstart av vårt forms-projekt. 
+   
 	
 4. Välj vilken plattform du vill testa på genom att högerklicka på iOS-, Android- eller Windows-projektet och välj ``Set as StartUp Project``.
 
