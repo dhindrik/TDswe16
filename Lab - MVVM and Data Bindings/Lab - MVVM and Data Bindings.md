@@ -277,7 +277,7 @@ Vi har nu definerat en vymodell och knutit denna vymodell till vyn och måste ut
 	```xaml
 	Text="{Binding Name}"
 	```
-	> **Varför** - Binding är en extension definerad i Xaml (TODO SOURCE). 
+	> **Varför** - Binding är en extension definerad i Xaml (TODO SOURCE och MER INFO). 
 
 3. Kör igång appen igen! Du bör få något som liknar bilden nedan.
 
@@ -355,9 +355,67 @@ För att en vy ska kommunicera tillbaka till en vymodell och faktiskt utgöra ar
 
 ### Skapa en basklass för vymodellen
 
+När man skrivit en del vymodeller så inser man att man kan flytta en del återkommande kod till en basklass. De flesta MVVM-ramverk definerar också en basklass.
 
+Vår basklass kommer att ta hand om `INotifyPropertyChanged`-implementationen och förbereda för navigation inom appen.
+
+1. Skapa en ny klass i ViewModels-katalogen och döp den till `ViewModelBase`.
+2. Flytta koden för implementation av `INotifyPropertyChanged` från `MainViewModel` till den nya basklassen.
+
+	```csharp
+	using System.ComponentModel;
+	using Xamarin.Forms;
+
+	namespace LabMvvm.ViewModels
+	{
+        public abstract class ViewModelBase : INotifyPropertyChanged
+        {
+            public INavigation Navigation { get; set; }
+
+        	public event PropertyChangedEventHandler PropertyChanged;
+
+            public void RaisePropertyChanged(string propertyName)
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
+    }
+	```
+
+	>**VARFÖR** - Det finns olika teorier på hur man ska lösa navigation i en MVVM-arkitektur. Denna lab visar hur man navigerar från vymodellen och genom att sätta en instans till ett objekt som implementerar INavigation.
+
+3. Uppdatera koden i `MainViewModel` till att använda denna basklass och plocka bort den kod som implementerar `INotifyPropertyChanged`. (Plocka bort all kod mellan klassens början och deklarationen av _name).
+
+	```csharp
+	public class MainViewModel : ViewModelBase
+	{
+	    private string _name;
+	    // rest omitted
+	}
+	```
+
+4. Uppdatera koden i `MainView.xaml.cs`
+
+	```csharp
+	public partial class MainView : ContentPage
+    {
+        public MainView()
+        {
+            InitializeComponent();
+            var vm = new MainViewModel();
+            vm.Navigation = Navigation;
+            BindingContext = vm;
+        }
+    }
+	```
+
+	>**Varför** - Vi har valt att dela instansieringen, tilldelningen av Navigation och tilldelningen av BindingContext på tre olika rader. Detta för att förbereda för komma skall.
+	>
+	>Observera att vi tilldelar sidans Navigation-referens till vymodellen. Detta kan man också göra från Xaml om man önskar men man tappar en del klarhet om hur koden fungerar då. I grund och botten är det en smaksak.
 
 ### Navigation till ordersidan
+
+
 
 * Skapa OrdersView 
 * Skapa OrdersViewModel
