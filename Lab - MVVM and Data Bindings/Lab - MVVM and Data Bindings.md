@@ -409,28 +409,199 @@ Vår basklass kommer att ta hand om `INotifyPropertyChanged`-implementationen oc
     }
 	```
 
-	>**Varför** - Vi har valt att dela instansieringen, tilldelningen av Navigation och tilldelningen av BindingContext på tre olika rader. Detta för att förbereda för komma skall.
+	>**Varför** - Vi har valt att dela instansieringen, tilldelningen av Navigation och tilldelningen av BindingContext på tre olika rader. Detta för att förbereda för vad som komma skall.
 	>
 	>Observera att vi tilldelar sidans Navigation-referens till vymodellen. Detta kan man också göra från Xaml om man önskar men man tappar en del klarhet om hur koden fungerar då. I grund och botten är det en smaksak.
 
-### Navigation till ordersidan
+### Ordersidan
 
+Vi ska skapa en ordersida och navigera till den.
 
+1. Skapa en ny klass under `ViewModels` som du döper till `OrdersViewModels`
 
-* Skapa OrdersView 
-* Skapa OrdersViewModel
-* Skapa en basklass för vymodeller (flytta navigation hit)
-* Uppdatera alla vymodeller att ärva från den basklassen
-* Uppdatera MainViewModel med ett ICommand för att navigera till OrdersView
-* Uppdatera MainView med en knapp som databinder till ICommand
+	<img src="Images/14.png" Width="300" />
+
+	```csharp
+	public class OrdersViewModel : ViewModelBase
+	{
+	}
+	```
+
+2. Skapa en ny `Forms Xaml Page` under `Views` som du döper till `OrdersView`.
+
+	<img src="Images/15.png" Width="500" />
+
+3. Uppdatera konstruktorn i vyns code-behind, `Views/OrdersView.Xaml.cs`
+
+	```csharp
+	public OrdersView()
+	{
+		InitializeComponent();
+		var vm = new OrdersViewModel();
+		vm.Navigation = Navigation;
+		BindingContext = vm;
+	}
+	```
+
+### Skapa navigation till Ordersidan
+
+1. Uppdatera `MainViewModel.cs` med ett kommando för att navigera till vyn som visar Orders.
+
+	```csharp
+	public ICommand NavigateToOrders
+    {
+        get
+	    {
+            return new Command(
+                async () =>
+                {
+                    await Navigation.PushAsync(new OrdersView());
+                });
+        }
+    }
+	```
+
+	>**VARFÖR** - Här är första stället som vi nyttjar den Navigation-referens som vi tilldelade tidigare.
+
+2. Uppdatera `MainView.xaml` med en knapp för att exekvera kommandot
+
+	```xaml
+	<StackLayout Padding="40">
+    	<Button Command="{Binding NavigateToOrders}" Text="View Orders" />
+    	<!-- additional controls omitted -->
+   </StackLayout>
+	```
+
+3. Sätt `NavigationPage` som MainPage i `app.xaml.cs`
+
+	```csharp
+	public App()
+	{
+		InitializeComponent();
+
+		MainPage = new NavigationPage(new LabMvvm.Views.MainView());
+	}
+	```
+
+	>**Varför** - En app som stödjer Navigering måste utgå från en `NavigationPage`. För iOS översätts detta till en `UINavigationController`. Man kan ha multipla `NavigationPage` exempelvis i en `TabbedPage`.
+	>
+	>**Extra** - När man har en NavigationPage kan man välja att sätta `Title`-attributen på en sida.
+	```<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="LabMvvm.Views.MainView"
+             Title="Orders R us"> ```
 
 ### Databinding - listor
-TODO
+Vi ska nu skapa en vy med ordrar. Som datakälla använder vi ett redan färdigt repository i ett projekt kallat `MvvmLab.Core`
 
-* Uppdatera OrdersView med en ListView
-* Uppdatera OrdersViewModel med att använda OrderRepository
-* Exponera en egenskap med orders i en ObservableCollection<T>
-* Implementera delete med swipe gesture
+1. Ändra `OrdersViewModel.cs`
+
+ 	```csharp
+ 	public class OrdersViewModel : ViewModelBase
+    {
+        private OrderRepository _orderRepository;
+
+        public OrdersViewModel()
+        {
+            _orderRepository = new Core.Repositories.OrderRepository();
+        }
+
+        public async Task LoadData()
+        {
+            Orders = new ObservableCollection<Order>(
+                await _orderRepository.GetOrdersAsync()
+            );
+        }
+
+        private ObservableCollection<Order> _orders;
+        public ObservableCollection<Order> Orders
+        {
+            get
+            {
+                return _orders;
+            }
+            set
+            {
+                _orders = value;
+                RaisePropertyChanged(nameof(Orders));
+            }
+        }
+   }
+   ```
+	
+	>**VARFÖR** - OrderRepository kommer från ett Core-projekt och representerar en datakälla. Man kan också tänka sig att vi refererar olika servicear eller liknande istället. Vi skapar en referens till den i konstruktorn. I en senare del av labben kommer vi instansiera dem på ett snyggare sätt.
+	>
+	>Metoden `LoadData()` hämtar data asynkront från datakällan och spar det returnerade datat i en lokal `ObservableCollection<T>`. Listor som man vet kommer att uppdateras genom att man lägger till eller tar bort objekt bör vara definerade som `ObservableCollection` då `ListView`-kontrollen hanterar events som defineras av ObservableCollection.
+	>
+	>Slutligen har vi den egenskap (`Orders`) som vi exponerar utåt mot vyn som håller listan med våra ordrar.
+
+2. Uppdatera OrdersView med en ListView och databind den
+
+	```xaml
+	<?xml version="1.0" encoding="utf-8" ?>
+	<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+				xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+				x:Class="LabMvvm.Views.OrdersView">
+
+	<ListView x:Name="OrderListView" ItemsSource="{Binding Orders}">
+		<ListView.ItemTemplate>
+		<DataTemplate>
+			<ViewCell>
+				<ViewCell.View>
+					<Grid Padding="14,5,5,5">
+
+					<Grid.RowDefinitions>
+						<RowDefinition Height="10" />
+						<RowDefinition Height="20" />
+					</Grid.RowDefinitions>
+
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="*" />
+						<ColumnDefinition Width="*" />
+					</Grid.ColumnDefinitions>
+
+					<!-- First Column -->
+					<Label Text="Customer" FontSize="Small" TextColor="#999999" />
+					<Label Text="{Binding Customer.Name}" Grid.Row="1" />
+					
+					<!-- Second Column -->
+					<Label Text="Status" FontSize="Small" TextColor="#999999" Grid.Column="1" />
+					<Label Text="{Binding Status}" Grid.Row="1" Grid.Column="1" />
+					</Grid>
+				</ViewCell.View>
+			</ViewCell>
+		</DataTemplate>
+		</ListView.ItemTemplate>
+	</ListView>
+	</ContentPage>
+
+	```
+
+3. Uppdatera OrdersView.xaml.cs med kod för att hämta data
+
+	```csharp
+    public OrdersView()
+	{
+		InitializeComponent();
+		var vm = new OrdersViewModel();
+		vm.Navigation = Navigation;
+		BindingContext = vm;
+
+		Device.BeginInvokeOnMainThread(async () => await vm.LoadData());
+	}
+	```
+
+	>**VARFÖR** - `Device.BeginInvokeOnMainThread` låter dig definiera en funktion som du vill schemaläggas att köras på UI-tråden. Det kan vara lockade att lägga denna kod i vy-modellen och det fungerar om vy-modellen ligger i Form-projektet och inte i en eget externt bibliotek. Det finns även vägar runt detta men för denna lab så duger upplägget ovan.
+
+4. Testkör appen och klicka på `View orders` på startvyn.
+
+	<img src="Images/16.png" Width="300" />
+
+5. Om man väljer en rad i listan nu så blir den markerad. Detta är oftast inte önskvärt. Öppna `OrdersView.Xaml.cs` och lägg till kodraden nedan längst ner i konstruktorn.
+
+	```csharp
+	OrderListView.ItemSelected += (s, e) => OrderListView.SelectedItem = null;
+	```
 
 ### Add order vy
 
@@ -452,15 +623,20 @@ TODO
 
 * Implementera IoC för snyggare fin-kod
 
-###
+### Grundprojektet
+
+* Lägg till Core-projektet
 
 
 
-### Interna noteringar
 
-* Skapa en IOrderRepository med implementation
-* 
 	
 	
 	
-	
+# Kommentarer från testare
+
+* Windows Phone verkar vara refererad i projektet fortfarande (i lab)
+* Varför skulle man vilja lägga vymodeller i ett annat projekt (bra att ta upp i introduktionen)?
+* Xamarin.Forms Previewer saknades?
+
+* För hämta TinyPubSub
