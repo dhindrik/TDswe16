@@ -3,18 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
 using Xamarin.Forms;
 
 namespace XamarinNews
 {
-    public partial class MainPage
+    public partial class NewsPage : ContentPage
     {
-        public MainPage()
+        public NewsPage()
         {
             InitializeComponent();
-
-            Children.Add(new NavigationPage(new HomePage()));
-            Children.Add(new NavigationPage(new NewsPage()));
         }
     }
 }
