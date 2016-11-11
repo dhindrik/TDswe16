@@ -1,3 +1,32 @@
+#Lab - Xamarin.Forms
+
+**Tid:** 60 minuter
+
+**Område:** iOS
+
+
+
+##Syfte med labben
+Att tillhandahålla grundläggande kunskaper för att komma igång att utveckla appar för iOS, Android och Windows med Xamarin.Forms
+
+##Förberedande arbete
+
+### Klona miljön
+```
+git clone https://github.com/dhindrik/TDswe16.git
+```
+
+### Öppna solution filen
+Öppna solution filen i **Visual Studio** eller i **Xamarin studio**.
+
+```
+/TDSwe16/Lab - Xamarin.Forms/lab/XamarinNews.sln
+```
+
+Om man skulle köra fast eller bara vill fuska lite så finns det en katalog som heter ```solution``` där man kan titta på hur det skulle ha blivit.
+
+## Instruktioner
+
 1. Skapa nytt projekt från mallen "Blank Xaml App (Xamarin.Forms.Portable)". Mallen finns under Cross-Platform under Visual C# i "Add New Project" fönstret. Ge projektet namnet "XamarinNews".
 
 	<img src="images/1.png">
@@ -24,7 +53,7 @@
 	
 	Lägg till "home.png" och "news.png" till Resources i iOS-projektet och döp om dem till "home@2x.png" och "news@2x.png". För Android lägg dem i mappen xhdpi. För Windows behöver vi inte lägga till dessa ikoner då det inte används ikoner för TabbedPage där.
 
-6. Lägg till ikoner till tabbarna genom att använda Icon-egenskapen på respektive sida. Lägg även till en titel på varje sida.
+6. Normalt lägger man till ikoner till tabbarna genom att använda Icon-egenskapen på respektive sida. Lägg även till en titel på varje sida som koden visar nedan.
 	
 	```xml
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"             x:Class="XamarinNews.HomePage"				Title="Home"				Icon="home.png">
@@ -32,6 +61,12 @@
 	```xml
 	<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"             x:Class="XamarinNews.NewsPage"				Title="News"				Tite="news.png">
 	```
+	Men eftersom vi har en NavigationPage för varje tabb behöver Title och Icon sättas på NavigationPage.
+	
+	```csharp
+	Children.Add(new NavigationPage(new HomePage()) { Title = "Home", Icon = "home.png" });    Children.Add(new NavigationPage(new NewsPage()) { Title = "News", Icon = "news.png" });
+    ```
+	
 7. För att få se live vad som händer när XAML ändras, öppna Xamarin.Forms Previewer. Den finns under View -> Other Windows -> Xamarin.Forms Previewer.
 8. Lägg till en StackLayout i HomePage. En StackLayout lägger komponenter efter varandra, standard är att den lägger dem vertikalt. Lägg även till Padding och Spacing. Padding är komponenternas avstånd till kanterna och  Spacing är avståndet mellan komponenterna i StackLayouten.
 	
@@ -62,5 +97,17 @@
 	```xml
 	<Button Text="Login" x:Name="Login" Style="{StaticResource LoginButton}" />
 	```
-	
-	
+12. I HomePage.xaml.cs skapa en eventhanterare och koppla den loginknappens Click event. I eventhanteraren kollar vi om något värde är angett i textfälten. Om båda fälten har värden navigerar vi vidare till WelcomePage. Navigeringen sker genom egenskapen Navigation som vi ärver från VisualElement som är en basklass till ContentPage. Om  fälten inte har värden vill vi visa en dialog som talar om det. Basklassen Page har en DisplayAlert metod vi kan använda för detta.
+
+	```csharp
+	public HomePage()    {        InitializeComponent();		 //Add the event handler to the Clicked event        Login.Clicked += Login_Clicked;	}        private void Login_Clicked(object sender, EventArgs e)        {            if(!string.IsNullOrWhiteSpace(Email.Text) && !string.IsNullOrWhiteSpace(Password.Text))            {                Navigation.PushAsync(new WelcomePage());            }            else            {                DisplayAlert("Could not login", "You have enter a invalid email address or an invalid password!", "OK");            }        }
+	```
+13. Gå till NewsPage.xaml för att skapa en lista med nyheter. För det skapar vi en ListView som vi ger namnet News. För listan vill vi skapa en mall för hur varje rad ska se ut. Det gör vi med hjälp av egenskapen ItemTemplate som ska vara av typen DataTemplate. Inuti DataTemplate kan vi specificera hur varje rad ska se ut. Varje rad i en lista måste bestå av en ViewCell. I ViewCell kan alla UI.komponenter läggas. Här lägger vi till en StackLayout med två labels för att visa en rubrik och ett datum när nyheten publicerades.Vi sätter HasUnevenRows till true på listan för att radernas höjd ska anpassas efter innehållet.
+
+
+
+	```xml
+		<ListView x:Name="News" HasUnevenRows="True">		<ListView.ItemTemplate>			<DataTemplate>				<ViewCell>					<StackLayout Padding="10">							<Label />							<Label />					</StackLayout>				</ViewCell>			</DataTemplate>		</ListView.ItemTemplate>	</ListView>
+	```
+
+14.  Lägg till en referens i projektet XamarinNews till projektet Xamarin.News.Core, där finns färdig kod som hämtar data från Xamarins blog.

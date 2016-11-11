@@ -19,7 +19,7 @@ namespace XamarinNews
 
         private void Login_Clicked(object sender, EventArgs e)
         {
-            if(string.IsNullOrWhiteSpace(Email.Text) && string.IsNullOrWhiteSpace(Password.Text))
+            if(!string.IsNullOrWhiteSpace(Email.Text) && !string.IsNullOrWhiteSpace(Password.Text))
             {
                 Navigation.PushAsync(new WelcomePage());
             }

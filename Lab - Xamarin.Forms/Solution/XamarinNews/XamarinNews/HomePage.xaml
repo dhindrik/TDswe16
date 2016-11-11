@@ -2,8 +2,7 @@
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="XamarinNews.HomePage"
-						 Title="Home"
-						 Icon="home.png">
+						 Title="Home">
 	<StackLayout Padding="10" Spacing="10">
 		<Entry x:Name="Email" Placeholder="Enter your email" />
 		<Entry x:Name="Password" IsPassword="True" Placeholder="Enter your password" />

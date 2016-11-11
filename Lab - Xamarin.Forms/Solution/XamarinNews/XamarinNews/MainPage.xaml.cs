@@ -13,8 +13,8 @@ namespace XamarinNews
         {
             InitializeComponent();
 
-            Children.Add(new NavigationPage(new HomePage()));
-            Children.Add(new NavigationPage(new NewsPage()));
+            Children.Add(new NavigationPage(new HomePage()) { Title = "Home", Icon = "home.png" });
+            Children.Add(new NavigationPage(new NewsPage()) { Title = "News", Icon = "news.png" });
         }
     }
 }
