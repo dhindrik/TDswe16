@@ -1,4 +1,4 @@
-#Lab - MVVM och Data Bindings
+# Lab - MVVM och Data Bindings
 
 **Tid:** 60 minuter
 
@@ -37,10 +37,11 @@ Om man skulle köra fast eller bara vill fuska lite så finns det en katalog som
 1.	Starta Visual Studio (eller Xamarin Studio)
 2. Öppna solution filen ``LabMvvm.sln``
 
-	> **Varför** - Projektet innehåller fyra projekt
+	> **Varför** - Projektet innehåller ett antal projekt
 	>
-	>* Ett gemensamt PCL-projekt där vi kommer lägga vyer, vymodeller och 	>gemensam kod
+	>* Ett gemensamt PCL-projekt där vi kommer lägga vyer, vymodeller och gemensam kod
 	>* Tre (eller fler) plattformsspecifika projekt som hanterar uppstart på respektive plattform samt plattformsspecifik kod.
+	>* Ett core bibliotek som innehåller kod som inte är relaterat till GUI
 
 3. Testa att bygga projektet, du behöver inte starta det i en emulator/device än.
 
@@ -562,7 +563,7 @@ Vi ska nu skapa en vy med ordrar. Som datakälla använder vi ett redan färdigt
 
 					<!-- First Column -->
 					<Label Text="Customer" FontSize="Small" TextColor="#999999" />
-					<Label Text="{Binding Customer.Name}" Grid.Row="1" />
+					<Label Text="{Binding Customer}" Grid.Row="1" />
 					
 					<!-- Second Column -->
 					<Label Text="Status" FontSize="Small" TextColor="#999999" Grid.Column="1" />
@@ -603,29 +604,193 @@ Vi ska nu skapa en vy med ordrar. Som datakälla använder vi ett redan färdigt
 	OrderListView.ItemSelected += (s, e) => OrderListView.SelectedItem = null;
 	```
 
-### Add order vy
+	>**VARFÖR** - Det normala beteendet i `ListView`-kontrollen är att valt element blir markerat tills du väljer ett annat. Eftersom vi vill navigera bort från denna vy när man väljer en order så vill vi inte returnera till den med en rad förvalt.
 
-TODO
+### Fody
+Innan vi slösar bort mer tid av vårt liv att skriva onödig kod så ska vi introducera en räddare i nöden vid namn **Fody**. Fody är en *IL Weaver* som innebär att den redigerar den IL-kod som genereras av kompilatorn. Det finns massor av plugins till Fody och vi ska använda en plugin som heter `PropertyChanged.Fody`.
 
-* Skapa en AddOrderView + modell
+Den gör en sak och den gör det väldigt bra. Den implementerar INotifyPropertyChanged åt oss och tar hand om allt rörmokeri när det gäller att anropa RaisePropertyChanged.
+
+Följande kod:
+
+```csharp
+private string _name;
+public string Name
+{
+	get
+	{
+		return _name;
+	}
+	set
+	{
+		_name = value;
+		RaisePropertyChanged(nameof(Name));
+	}
+}
+```
+
+Kan med hjälp av `PropertyChanged.Fody` ersättas med:
+
+```csharp
+public string Name { get; set; }
+```
+
+Installation och konfiguration är en relativt enkel process.
+
+1. Installera nuget-paketet `Fody.PropertyChanged` i **LabMvvm (portable)** projektet.
+
+	<img src="Images/17.png" width="600" />
+
+2. Konfigurera PropertyChanged.Fody - **ENDAST XAMARIN STUDIO**:
+
+	I roten på **LabMvvm (Portable)** skapas en fil som heter `FodyWeavers.xml`
+
+	<img src="Images/18.png" Width="300" />
+
+	Öppna den och se till att den ser ut som exemplet nedan.
+
+	```xml
+	<?xml version="1.0" encoding="utf-8"?>
+	<Weavers>
+	  <PropertyChanged />
+	</Weavers>
+	```
+
+	>**VARFÖR** - I nuget-paketet ingår ett PowerShell-skript som inte exekveras i Xamarin Studio. Därför läggs aldrig noden `<PropertyChanged />` med och man får då göra det manuellt.
+
+3. Öppna `ViewModelBase` och ändra innehållet till följande:
+
+	```csharp
+	[ImplementPropertyChanged]
+    public abstract class ViewModelBase 
+    {
+        public INavigation Navigation { get; set; }
+    }
+	```
+
+	>**VARFÖR** - Vi har plockat bort allt som har med `INotifyPropertyChanged` att göra. Fody fixar det åt oss numera.
+
+4. Öppna `OrdersViewModel.cs` och egenskapen Orders till följande
+
+	```csharp
+	public ObservableCollection<Order> Orders { get; set; }
+	```
+
+5. Öpnna `MainViewModel.cs` och ändra innehållet till följande:
+
+	```csharp
+	public class MainViewModel : ViewModelBase
+    {
+        public string Name { get; set; }
+
+        public string Greeting { get; set;  }
+
+        public ICommand SayHi
+        {
+            get
+            {
+                return new Command(
+                    () => Greeting = $"Hi {Name}");
+            }
+        }
+
+        public ICommand NavigateToOrders
+        {
+            get
+            {
+                return new Command(
+                    async () =>
+                    {
+                        await Navigation.PushAsync(new OrdersView());
+                    });
+            }
+        }
+    }
+	```
+
+6. Testkör projektet och allt fungerar förhoppningsvis som innan.
+
+	>**VARFÖR** - Fody hjälper oss att fokusera på att skriva mindre mängd kod. Läs gärna mer på [https://github.com/Fody/PropertyChanged](https://github.com/Fody/PropertyChanged)
+
+### Add/Edit order vy
+
+1. Skapa `ViewModels/AddOrderViewModel.cs` och lägg till följande innehåll:
+
+	```csharp
+
+	```
+
+2. Skapa `Views/AddOrderView.xaml` och lägg tillföljande xaml och code behind
+
+	```xaml
+	
+	```
+
+
+	```csharp
+	public partial class AddOrderView : ContentPage
+    {
+        public AddOrderView()
+        {
+            InitializeComponent();
+            var vm = new AddOrderViewModel();
+            vm.Navigation = Navigation;
+            BindingContext = vm;
+        }
+    }
+	```
+
+### Lägg till en ToolbarItem för att skapa en ny order 
+
+<img src="Images/19.png" Width="300" />
+
+1. Öppna `Views/Orders.xaml` och lägg till följande Xaml direkt under rot-noden `ContentPage`.
+
+	```xaml
+ 	<ContentPage.ToolbarItems>
+    	<ToolbarItem Name="Add" Command="{Binding AddOrder}" />
+  	</ContentPage.ToolbarItems>
+	```
+
+2. Lägg till det Command vi refererar till i `ViewModels/OrdersViewModel.cs`
+
+	```csharp
+	public ICommand AddOrder
+	{
+	   get
+	   {
+	      return new Command(async () =>
+	      {
+	         var view = new AddOrderView();
+	         await Navigation.PushAsync(view);
+          });
+	   }
+	}
+	```
+
+* Skapa en EditOrderView + modell
 * Koppla till repository
 * Uppdatera OrdersView med en Pull to refresh
+
+## Extramaterial
+
+Allt i denna sektion är tips och trix för att förbättra den lilla applikation vi har skapat.
+
+### Extra material - Autofac för IoC
+
+* Implementera IoC för snyggare fin-kod
+* 
 
 ### Extra material - TinyPubSub
 
 * Uppdatera OrdersView direkt vid Add order
 
-### Extra material - Fody
 
-* Slipp INotifyPropertyChanged
-
-### Extra material - Autofac för IoC
-
-* Implementera IoC för snyggare fin-kod
 
 ### Grundprojektet
 
 * Lägg till Core-projektet
+* 
 
 
 
