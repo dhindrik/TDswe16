@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="LabMvvm.Views.MainView"
+             Title="Orders R us">
+  <StackLayout Padding="40">
+    <Button Command="{Binding NavigateToOrders}" Text="View Orders" />
+    <Label Text="Ditt namn:" />
+    <Entry Text="{Binding Name}" />
+    <Button Command="{Binding SayHi}" Text="Say hi!" />
+    <Label Text="{Binding Greeting}" />
+    <Label Text="{Binding Name}" />
+  </StackLayout>
+</ContentPage>
