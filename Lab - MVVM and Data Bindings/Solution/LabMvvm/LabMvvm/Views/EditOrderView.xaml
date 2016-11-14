@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="LabMvvm.Views.EditOrderView">
+  <StackLayout Padding="10">
+
+    <Label Text="Create date" FontSize="Small" TextColor="#999999" />
+    <Label Text="{Binding Order.CreateDate}" />
+    
+    <Label Text="Order date" FontSize="Small" TextColor="#999999" />
+    <Label Text="{Binding Order.OrderDate}" />
+    
+    <Label Text="Status" FontSize="Small" TextColor="#999999" />
+    <Label Text="{Binding Order.Status}" />
+    
+    <Label Text="Customer" FontSize="Small" TextColor="#999999" />
+    <Entry Text="{Binding Order.Customer}" Placeholder="Enter customer name" />
+
+    <Label Text="Order text" FontSize="Small" TextColor="#999999" />
+    <Editor Text="{Binding Order.OrderText}" />
+    
+    <Button Text="Mark as shipped" />
+    <Button Text="Delete" TextColor="Red" />
+    
+  </StackLayout>
+</ContentPage>
