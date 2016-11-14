@@ -154,3 +154,9 @@ private void News_ItemSelected(object sender, SelectedItemChangedEventArgs e){
 ```
 
 19. Kör appen på valfri plattform.
+20. Om man vill ha olika egenskaper på olika plattformar, tex olika textfärg på en rubrik kan man göra det med hjälp av OnPlatform. I NewsPage ändrar vi så att rubriken har olika färg på olika plattformar. x:TypeArguments används i OnPlatform för att tala om vilken typ egenskapen är av.
+
+	```xml
+	<Label Text="{Binding Title}" LineBreakMode="TailTruncation" FontAttributes="Bold">		<Label.TextColor>				<OnPlatform x:TypeArguments="Color" iOS="Green" Android="Red" WinPhone="Blue" />		</Label.TextColor></Label>
+	```
+21. Kör appen på valfri plattform.
