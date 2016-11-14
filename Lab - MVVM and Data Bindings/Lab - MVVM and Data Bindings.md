@@ -740,6 +740,60 @@ Installation och konfiguration är en relativt enkel process.
     }
 	```
 
+3. Öppna `Views/Orders.xaml` och lägg till `IsPullToRefreshEnabled` och `RefreshCommand` på ListView-taggen 
+
+	```xaml
+	<ListView x:Name="OrderListView" 
+			  ItemsSource="{Binding Orders}" 
+			  IsPullToRefreshEnabled="True" RefreshCommand="{Binding Refresh}"
+			  SelectedItem="{Binding SelectedOrder}">
+	```
+
+4. Öppna `ViewModels/OrdersViewModel.cs` och lägg till ett kommando för att hantera Refresh.
+
+	```csharp
+	public ICommand Refresh
+    {
+	   get
+       {
+          return new Command(async () =>
+	      {
+	         IsRefreshing = true;
+             await LoadData();
+	         IsRefreshing = false;
+	      });
+       }
+    }
+
+    public bool IsRefreshing { get; set; }
+	```
+
+	>**VARFÖR** - Vi laddar om data genom att anropa `LoadData()` igen. För att vyn ska hålla koll på om den ska visa ladda-snurran eller ej så lägger vi till ett kontrollfält för det som vi kallas för `IsRefreshing`. Denna är bunden till Listvyns motsvarighet.
+
+5. Justera även `LoadData()` i samma klass
+
+	```csharp
+    public async Task LoadData()
+    {
+        if(Orders == null)
+        {
+            Orders = new ObservableCollection<Order>();
+        }
+        else
+        {
+            foreach (var order in await _orderRepository.GetOrdersAsync())
+            {
+                if(!Orders.Any(e=>e.Id == order.Id))
+                {
+                   Orders.Add(order);
+                }
+            }
+        }
+	}
+	```
+
+	>**VARFÖR** - Vi vill bara uppdatera listvyn med nya ordrar. Detta är kärnan i att använda ObservableCollection.
+
 ### Lägg till en ToolbarItem för att skapa en ny order 
 
 <img src="Images/19.png" Width="300" />
@@ -769,7 +823,28 @@ Installation och konfiguration är en relativt enkel process.
 	```
 
 * Skapa en EditOrderView + modell
-* Koppla till repository
+
+### Skapa navigation från orderlistan
+
+1. Öppna `ViewModels/OrdersViewModel.cs`
+2. Lägg till följande kod någonstans i klassen
+
+	```csharp
+	TODO Add SelectedOrder
+	```
+
+3. Öppna `Views/Orders.xaml`.
+4. Lägg till `SelectedItem="{Binding SelectedOrder}` som attribut på ListView-taggen.
+
+	```xaml
+	<ListView x:Name="OrderListView" 
+			  ItemsSource="{Binding Orders}" 
+			  IsPullToRefreshEnabled="True" RefreshCommand="{Binding Refresh}"
+			  SelectedItem="{Binding SelectedOrder}">
+	```
+
+	>**VARFÖR** - Vald "item" i en lista är bindningsbart. Vi nyttjar det faktumet och utför navigationslogiken i settern i vymodellen.
+
 * Uppdatera OrdersView med en Pull to refresh
 
 ## Extramaterial
