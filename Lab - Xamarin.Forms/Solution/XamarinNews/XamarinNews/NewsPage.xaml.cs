@@ -24,5 +24,12 @@ namespace XamarinNews
 
             News.ItemsSource = data;
         }
+
+        private void News_ItemSelected(object sender, SelectedItemChangedEventArgs e)
+        {
+            var item = e.SelectedItem as NewsItem;
+
+            Device.OpenUri(new Uri(item.Url));
+        }
     }
 }
