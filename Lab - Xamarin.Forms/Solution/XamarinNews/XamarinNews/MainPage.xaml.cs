@@ -7,11 +7,14 @@ using Xamarin.Forms;
 
 namespace XamarinNews
 {
-    public partial class MainPage : ContentPage
+    public partial class MainPage
     {
         public MainPage()
         {
             InitializeComponent();
+
+            Children.Add(new NavigationPage(new HomePage()) { Title = "Home", Icon = "home.png" });
+            Children.Add(new NavigationPage(new NewsPage()) { Title = "News", Icon = "news.png" });
         }
     }
 }
