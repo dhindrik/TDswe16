@@ -60,11 +60,13 @@ Ett MVVM-projekt följer oftast vanligtvis en grundläggande struktur. Det förs
 Alla appar behöver en startsida.
 
 1. Högerklicka på *Views*-katalogen under *LabMvvm (portable)* och välj ``Add -> New Item``
-2. Välj ``Forms Xaml Page``och skriv ``MainPage.xaml`` och klicka på ``Add``
+2. Välj ``Forms Xaml Page``och skriv ``MainView.xaml`` och klicka på ``Add``
 	
-	<img src="Images/3.png" Width="600" />
+	<img src="Images/3.png?1" Width="600" />
+
+	>**VIKTIGT** - Se till att välja **Forms Xaml Page** och inte **Forms Page** som är två items upp. Väljer du den övre får du en vy som är helt definierad i C#. Det är fullt möjligt att göra samma sak utan Xaml men hela denna labb bygger på Xaml.
 	
-3. Öppna ``MainPage.xaml`` genom att dubbelklicka på den
+3. Öppna ``MainView.xaml`` genom att dubbelklicka på den
 4. Ändra Text-attributen från
 
 	```xaml
@@ -101,6 +103,8 @@ Alla appar behöver en startsida.
 
 	<img src="Images/4.png" Width="300" />
 
+	> Den ligger som en relaterad fil till App.xaml så du måste öppna upp App.xaml först.
+
 3. Ändra innehållet i konstruktorn till 
 
 	```csharp
@@ -125,7 +129,7 @@ Alla appar behöver en startsida.
 	
 6. Klicka på "play" eller tryck F5
 
-	>Första uppstarten av simulator kan ta lite tid. Om du kör android så se till att ha en x86-baserad emulator. Det enklaste trixet är att ladda hem Xamarin Android Player.
+	>Första uppstarten av simulator kan ta lite tid. Om du kör android så se till att ha en x86-baserad emulator.
 	
 	<img src="Images/8.png" Width="300" />
 
@@ -227,7 +231,7 @@ INotifyPropertyChanged är ett interface definierat i `System.ComponentModel` oc
 
 	> **Varför** - 	Name är en klassisk C# egenskap. Normalt sett hade man använt den enklare syntaxten `public string Name { get; set; }` men eftersom vi måste anropa `RaisePropertyChanged` på settern så kan vi inte använda oss av den kortare varianten. Men oroa dig inte, det finns snygga vägar runt detta också. Vi kommer till det i extra-materialet.
 
-### Skapa vymodellen i vyn
+### Instansiera vymodellen i vyn
 
 1. Öppna filen `Views/MainView.xaml.cs`
 
@@ -278,7 +282,7 @@ Vi har nu definerat en vymodell och knutit denna vymodell till vyn och måste ut
 	```xaml
 	Text="{Binding Name}"
 	```
-	> **Varför** - Binding är en extension definerad i Xaml (TODO SOURCE och MER INFO). 
+	> **Varför** - Binding är en extension definerad i Xaml. 
 
 3. Kör igång appen igen! Du bör få något som liknar bilden nedan.
 
@@ -717,15 +721,58 @@ Installation och konfiguration är en relativt enkel process.
 1. Skapa `ViewModels/AddOrderViewModel.cs` och lägg till följande innehåll:
 
 	```csharp
+	public class AddOrderViewModel : ViewModelBase
+    {
+        private OrderRepository _orderRepository;
 
+        public string Customer { get; set; }
+        public string OrderText { get; set;  }
+
+        public AddOrderViewModel()
+        {
+            _orderRepository = new Core.Repositories.OrderRepository();
+        }
+
+        public ICommand CreateOrder
+        {
+            get
+            {
+                return new Command(async () =>
+                {
+                    await _orderRepository.Create(Customer, OrderText);
+                    await Navigation.PopAsync();
+                });
+            }
+        }
+    }
 	```
 
-2. Skapa `Views/AddOrderView.xaml` och lägg tillföljande xaml och code behind
+2. Skapa `Views/AddOrderView.xaml` och lägg tillföljande xaml
 
-	```xaml
+	```xml
+	<?xml version="1.0" encoding="utf-8" ?>
+	<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+              x:Class="LabMvvm.Views.AddOrderView">
+  
+  	<ContentPage.ToolbarItems>
+    	<ToolbarItem Name="Create" Command="{Binding CreateOrder}" />
+  	</ContentPage.ToolbarItems>
+
+  		<StackLayout Padding="10">
+    
+    		<Label Text="Customer" FontSize="Small" TextColor="#999999" />
+    		<Entry Text="{Binding Customer}" Placeholder="Enter customer name" />
+
+    		<Label Text="Order text" FontSize="Small" TextColor="#999999" />
+    		<Editor Text="{Binding OrderText}" BackgroundColor="#EEEEEE" HeightRequest="200" />
+
+  		</StackLayout>
+	</ContentPage>
 	
 	```
 
+3. Öppna `Views/AddOrderView.xaml.cs` och lägg till följande kod.
 
 	```csharp
 	public partial class AddOrderView : ContentPage
@@ -740,7 +787,61 @@ Installation och konfiguration är en relativt enkel process.
     }
 	```
 
+3. Öppna `Views/Orders.xaml` och lägg till `IsPullToRefreshEnabled` och `RefreshCommand` på ListView-taggen 
+
+	```xaml
+	<ListView x:Name="OrderListView" 
+			  ItemsSource="{Binding Orders}" 
+			  IsPullToRefreshEnabled="True" RefreshCommand="{Binding Refresh}"
+			  SelectedItem="{Binding SelectedOrder}">
+	```
+
+4. Öppna `ViewModels/OrdersViewModel.cs` och lägg till ett kommando för att hantera Refresh.
+
+	```csharp
+	public ICommand Refresh
+    {
+	   get
+       {
+          return new Command(async () =>
+	      {
+	         IsRefreshing = true;
+             await LoadData();
+	         IsRefreshing = false;
+	      });
+       }
+    }
+
+    public bool IsRefreshing { get; set; }
+	```
+
+	>**VARFÖR** - Vi laddar om data genom att anropa `LoadData()` igen. För att vyn ska hålla koll på om den ska visa ladda-snurran eller ej så lägger vi till ett kontrollfält för det som vi kallas för `IsRefreshing`. Denna är bunden till Listvyns motsvarighet.
+
+5. Justera även `LoadData()` i samma klass
+
+	```csharp
+    public async Task LoadData()
+    {
+        if(Orders == null)
+        {
+            Orders = new ObservableCollection<Order>();
+        }
+      
+		foreach (var order in await _orderRepository.GetOrdersAsync())
+		{
+			if(!Orders.Any(e=>e.Id == order.Id))
+			{
+				Orders.Add(order);
+			}
+		}
+	}
+	```
+
+	>**VARFÖR** - Vi vill bara uppdatera listvyn med nya ordrar. Detta är kärnan i att använda ObservableCollection.
+
 ### Lägg till en ToolbarItem för att skapa en ny order 
+
+För att komma åt vyn som lägger till orders måste vi navigera till den. Vi gör det via en Toolbar-knapp. Det skulle givetvis gå bra med vilken knapp som helst.
 
 <img src="Images/19.png" Width="300" />
 
@@ -768,40 +869,62 @@ Installation och konfiguration är en relativt enkel process.
 	}
 	```
 
-* Skapa en EditOrderView + modell
-* Koppla till repository
-* Uppdatera OrdersView med en Pull to refresh
+3. Testkör! Det bör nu i teorin gå att lägga till en order och sedan göra en pull to refresh för att ladda om ordersidan.
 
-## Extramaterial
+	>**VIKTIGT** - Vi har medvetet valt att göra en Pull-To-Refresh för att ladda om. Det finns flera olika varianter att uppdatera listan. Fråga din handledare om du är intresserad av vilka andra sätt som du kan göra det på.
+
+### Skapa navigation från orderlistan
+
+1. Öppna `ViewModels/OrdersViewModel.cs`
+2. Lägg till följande kod någonstans i klassen
+
+	```csharp
+	public Order SelectedOrder
+    {
+        set
+        {
+            if(value!=null)
+            {
+                Device.BeginInvokeOnMainThread(async () =>
+                {
+                    var view = new EditOrderView();
+                    var vm = view.BindingContext as EditOrderViewModel;
+                    await Navigation.PushAsync(view);
+                    await vm.LoadData(value.Id);
+                });
+            }
+        }
+    }
+	```
+
+3. Öppna `Views/Orders.xaml`.
+4. Lägg till `SelectedItem="{Binding SelectedOrder}` som attribut på ListView-taggen.
+
+	```xaml
+	<ListView x:Name="OrderListView" 
+			  ItemsSource="{Binding Orders}" 
+			  IsPullToRefreshEnabled="True" RefreshCommand="{Binding Refresh}"
+			  SelectedItem="{Binding SelectedOrder}">
+	```
+
+	>**VARFÖR** - Vald "item" i en lista är bindningsbart. Vi nyttjar det faktumet och utför navigationslogiken i settern i vymodellen.
+
+## Extramaterial (kommer senare)
 
 Allt i denna sektion är tips och trix för att förbättra den lilla applikation vi har skapat.
 
 ### Extra material - Autofac för IoC
 
 * Implementera IoC för snyggare fin-kod
-* 
 
 ### Extra material - TinyPubSub
 
-* Uppdatera OrdersView direkt vid Add order
+* Uppdatera orderlistan direkt vid lägg till order
 
+### Extra material - ACR Dialogs
 
-
-### Grundprojektet
-
-* Lägg till Core-projektet
 * 
 
+### Extra utmaningar
 
-
-
-	
-	
-	
-# Kommentarer från testare
-
-* Windows Phone verkar vara refererad i projektet fortfarande (i lab)
-* Varför skulle man vilja lägga vymodeller i ett annat projekt (bra att ta upp i introduktionen)?
-* Xamarin.Forms Previewer saknades?
-
-* För hämta TinyPubSub
+* Lägg till en knapp för att ta bort en order
