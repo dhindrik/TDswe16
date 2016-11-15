@@ -2,7 +2,7 @@
 
 **Tid:** 60 minuter
 
-**Område:** iOS
+**Område:** Xamarin.Forms, iOS, Android och Windows
 
 
 
@@ -80,6 +80,9 @@ Om man skulle köra fast eller bara vill fuska lite så finns det en katalog som
 	```xml
 	<StackLayout Padding="10" Spacing="10">		<Entry x:Name="Email" Placeholder="Enter your email" />		<Entry x:Name="Password" IsPassword="True" Placeholder="Enter your password" />		<Button Text="Login" x:Name="Login" />		<Button Text="Register" x:Name="Register" />	</StackLayout>
 	```
+	
+10. Kör appen på valfri plattform.
+
 10. För att ändra färg på knapparna kan vi använda BackgroundColor- och TextColor-egenskaperna. För att slippa göra det på varje knapp i hela appenn går vi till App.xaml och skapar en Style. TargetType talar om fört vilken komponent som stylen ska användas för. För varje egenskap vi vill sätta i Stylen skapar vi en sätter. I detta fallet ändrar vi backgrunden till blå och textenfärgen till vit.
 
 	```xml
@@ -102,6 +105,8 @@ Om man skulle köra fast eller bara vill fuska lite så finns det en katalog som
 	```csharp
 	public HomePage()    {        InitializeComponent();		 //Add the event handler to the Clicked event        Login.Clicked += Login_Clicked;	}        private void Login_Clicked(object sender, EventArgs e)        {            if(!string.IsNullOrWhiteSpace(Email.Text) && !string.IsNullOrWhiteSpace(Password.Text))            {                Navigation.PushAsync(new WelcomePage());            }            else            {                DisplayAlert("Could not login", "You have enter a invalid email address or an invalid password!", "OK");            }        }
 	```
+13. Kör appen på valfri plattform.
+
 13. Gå till NewsPage.xaml för att skapa en lista med nyheter. För det skapar vi en ListView som vi ger namnet News. För listan vill vi skapa en mall för hur varje rad ska se ut. Det gör vi med hjälp av egenskapen ItemTemplate som ska vara av typen DataTemplate. Inuti DataTemplate kan vi specificera hur varje rad ska se ut. Varje rad i en lista måste bestå av en ViewCell. I ViewCell kan alla UI.komponenter läggas. Här lägger vi till en StackLayout med två labels för att visa en rubrik och ett datum när nyheten publicerades.Vi sätter HasUnevenRows till true på listan för att radernas höjd ska anpassas efter innehållet.
 
 
@@ -111,3 +116,47 @@ Om man skulle köra fast eller bara vill fuska lite så finns det en katalog som
 	```
 
 14.  Lägg till en referens i projektet XamarinNews till projektet Xamarin.News.Core, där finns färdig kod som hämtar data från Xamarins blog.
+
+15. I NewsPage.xaml.cs hämta datan från Core-projektet och koppla det till Listan med egenskapen ItemsSource. Eftersom Get metoden är async bör get metoden läggas i en egen metod. Här skapar vi en Initialize-metod som vi lägger den i.
+
+	```csharp
+	public NewsPage()	{		InitializeComponent();		Initialize();	}	public async Task Initialize()	{		var data = await XamarinService.Get();    	News.ItemsSource = data;	}
+	```
+
+16. För att rätt data ska visas i listan behöver vi koppla våra labels till egenskaper i NewsItem-klassen. Det gör vi med hjälp av bindningar. Rubriken gör vi i fetstil genom att använda FontAttributes på Label. För att hantera om rubriken är för lång för att få plats på bredden sätter vi LineBreakMode till TailTruncation.
+
+	```xml
+	<Label Text="{Binding Title}" LineBreakMode="TailTruncation" FontAttributes="Bold" />	<Label Text="{Binding PublishDate}" />
+	```
+17. Kör appen på valfri plattform.
+	
+17. Om vi vill formatera datumet, kan vi göra det direkt i XAML med hjälp av StringFormat.
+
+	```xml
+	<Label Text="{Binding PublishDate, StringFormat='{}{0:yyyy-MM-dd}'}" />
+	```
+18. Kör appen på valfri plattform.
+	
+17. För att inte få prestanda problem med stora listor vill vi att cellerna ska återanvändas när de inte längre är synliga på skärmen istället för att det ska skapas nya för varje rad i listan. Detta betende kan vi få genom att sätta CachingStrategy på ListView till RecycleElement. Standard är RetainElement vilket innebär att celler inte återanvänds.
+
+	```xml
+	<ListView CachingStrategy="RecycleElement">
+	```
+	
+18. När man klickar på en rad i listan vill vi öppna länken och läsa hela nyheten. Detta gör vi med hjälp av ItemSelected eventet.
+
+	```xml
+	<ListView x:Name="News" ItemSelected="News_ItemSelected">
+```
+
+	```csharp
+private void News_ItemSelected(object sender, SelectedItemChangedEventArgs e){     	var item = e.SelectedItem as NewsItem;     	Device.OpenUri(new Uri(item.Url));}
+```
+
+19. Kör appen på valfri plattform.
+20. Om man vill ha olika egenskaper på olika plattformar, tex olika textfärg på en rubrik kan man göra det med hjälp av OnPlatform. I NewsPage ändrar vi så att rubriken har olika färg på olika plattformar. x:TypeArguments används i OnPlatform för att tala om vilken typ egenskapen är av.
+
+	```xml
+	<Label Text="{Binding Title}" LineBreakMode="TailTruncation" FontAttributes="Bold">		<Label.TextColor>				<OnPlatform x:TypeArguments="Color" iOS="Green" Android="Red" WinPhone="Blue" />		</Label.TextColor></Label>
+	```
+21. Kör appen på valfri plattform.
