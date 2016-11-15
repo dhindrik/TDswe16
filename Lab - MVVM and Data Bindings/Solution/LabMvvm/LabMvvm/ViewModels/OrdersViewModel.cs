@@ -27,14 +27,12 @@ namespace LabMvvm.ViewModels
             {
                 Orders = new ObservableCollection<Order>();
             }
-            else
+            
+            foreach (var order in await _orderRepository.GetOrdersAsync())
             {
-                foreach (var order in await _orderRepository.GetOrdersAsync())
+                if(!Orders.Any(e=>e.Id == order.Id))
                 {
-                    if(!Orders.Any(e=>e.Id == order.Id))
-                    {
-                        Orders.Add(order);
-                    }
+                    Orders.Add(order);
                 }
             }
         }
