@@ -826,16 +826,14 @@ Installation och konfiguration är en relativt enkel process.
         {
             Orders = new ObservableCollection<Order>();
         }
-        else
-        {
-            foreach (var order in await _orderRepository.GetOrdersAsync())
-            {
-                if(!Orders.Any(e=>e.Id == order.Id))
-                {
-                   Orders.Add(order);
-                }
-            }
-        }
+      
+		foreach (var order in await _orderRepository.GetOrdersAsync())
+		{
+			if(!Orders.Any(e=>e.Id == order.Id))
+			{
+				Orders.Add(order);
+			}
+		}
 	}
 	```
 
